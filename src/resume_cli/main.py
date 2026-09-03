@@ -9,7 +9,7 @@ from pathlib import Path
 import typer
 
 from resume_cli.errors import ResumeCliError
-from resume_cli.pdf_service import validate_pdf_file
+from resume_cli.pdf_service import extract_text
 
 app = typer.Typer(
     name="resume-cli",
@@ -22,17 +22,17 @@ app = typer.Typer(
 def parse(pdf_path: Path) -> None:
     """Read a PDF resume and extract plain text."""
     try:
-        validate_pdf_file(pdf_path)
+        # extract_text 内部会先做文件校验,再提取全文,一条链路完成
+        # 文件不存在/是目录/非 PDF/无法读取/无文本 五类错误处理。
+        text = extract_text(pdf_path)
     except ResumeCliError as e:
-        # 预期内的业务错误(文件不存在、目录、非 PDF、无法读取)统一在这里
-        # 转成一行 "Error: ..." 输出到 stderr,并以非 0 退出码结束,
-        # 而不是把 Python traceback 展示给用户。
+        # 预期内的业务错误统一转成一行 "Error: ..." 输出到 stderr,
+        # 并以非 0 退出码结束,而不是把 Python traceback 展示给用户。
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(code=1)
 
-    # PDF 校验已通过;真正的文本提取在后续 Phase 实现。
-    typer.echo("parse: PDF 文本提取将在后续阶段实现。", err=True)
-    raise typer.Exit(code=1)
+    # 成功:直接把简历全文输出到 stdout(供管道/重定向使用)。
+    typer.echo(text)
 
 
 @app.command()
