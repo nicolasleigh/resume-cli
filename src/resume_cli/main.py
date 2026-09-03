@@ -8,6 +8,9 @@ from pathlib import Path
 
 import typer
 
+from resume_cli.errors import ResumeCliError
+from resume_cli.pdf_service import validate_pdf_file
+
 app = typer.Typer(
     name="resume-cli",
     help="AI Resume Parser CLI: parse a PDF resume, extract structured info, score against a JD.",
@@ -18,8 +21,17 @@ app = typer.Typer(
 @app.command()
 def parse(pdf_path: Path) -> None:
     """Read a PDF resume and extract plain text."""
-    # 占位实现:正式实现在后续 Phase(文件校验 + PDF 文本提取)完成。
-    typer.echo("parse 命令将在后续阶段实现。", err=True)
+    try:
+        validate_pdf_file(pdf_path)
+    except ResumeCliError as e:
+        # 预期内的业务错误(文件不存在、目录、非 PDF、无法读取)统一在这里
+        # 转成一行 "Error: ..." 输出到 stderr,并以非 0 退出码结束,
+        # 而不是把 Python traceback 展示给用户。
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+    # PDF 校验已通过;真正的文本提取在后续 Phase 实现。
+    typer.echo("parse: PDF 文本提取将在后续阶段实现。", err=True)
     raise typer.Exit(code=1)
 
 
