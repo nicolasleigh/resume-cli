@@ -26,3 +26,7 @@ class NotPDFError(ResumeCliError):
 
 class PDFReadError(ResumeCliError):
     """PDF 无法被解析器打开(损坏、加密或伪造的 PDF)。"""
+
+
+class EmptyPDFError(ResumeCliError):
+    """PDF 能打开但没有可提取的文本(例如纯扫描图片 PDF)。"""

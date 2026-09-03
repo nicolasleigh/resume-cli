@@ -1,7 +1,7 @@
 """PDF 服务:输入文件校验与文本提取。
 
-Phase 1 只实现"真正解析 PDF 之前"的输入文件基础校验;
-文本提取(extract_text)将在后续 Phase 加入本模块。
+- validate_pdf_file:解析前的基础校验(Phase 1);
+- extract_text:把 PDF 全文提取为字符串(Phase 2)。
 """
 
 from pathlib import Path
@@ -9,6 +9,7 @@ from pathlib import Path
 from pypdf import PdfReader
 
 from resume_cli.errors import (
+    EmptyPDFError,
     NotPDFError,
     PDFNotFoundError,
     PDFReadError,
@@ -45,3 +46,30 @@ def validate_pdf_file(pdf_path: Path) -> Path:
         raise PDFReadError(f"PDF file cannot be read:\n{pdf_path}") from exc
 
     return pdf_path
+
+
+def extract_text(pdf_path: Path) -> str:
+    """读取 PDF 并返回所有页面的拼接文本。
+
+    为什么遍历所有页面:简历 PDF 往往不止一页,只有遍历每一页、
+    把全部页面文本拼成一份完整文本,后续 AI 解析才能看到完整信息。
+    页面之间插入换行,避免两页边界处的文字粘连。
+
+    若 PDF 能打开但所有页面都提取不到文本(典型是纯扫描图片 PDF),
+    则抛 EmptyPDFError;本项目 MVP 不支持 OCR,README 中会说明这一点。
+    """
+    validate_pdf_file(pdf_path)
+
+    reader = PdfReader(str(pdf_path))
+    page_texts: list[str] = []
+    for page in reader.pages:
+        text = page.extract_text() or ""
+        if text.strip():
+            # 单页内部先做 strip,拼接时用换行分隔,保证整份文本干净。
+            page_texts.append(text.strip())
+
+    full_text = "\n".join(page_texts).strip()
+    if not full_text:
+        raise EmptyPDFError("PDF contains no extractable text")
+
+    return full_text
