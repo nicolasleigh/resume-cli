@@ -12,12 +12,21 @@ from typing import Any
 from pydantic import ValidationError
 
 from resume_cli.errors import AIResponseError
-from resume_cli.models import Resume
+from resume_cli.models import Resume, Score
 
 # extract schema 要求顶层包含这六个字段。
 REQUIRED_TOP_KEYS = {"name", "phone", "email", "city", "education", "skills"}
 # 每条教育经历要求包含这四个字段。
 EDUCATION_FIELDS = {"school", "major", "degree", "graduation_time"}
+# score schema 要求顶层包含这六个字段。
+SCORE_REQUIRED_KEYS = {
+    "overall_score",
+    "skill_score",
+    "experience_score",
+    "education_score",
+    "comment",
+    "interview_questions",
+}
 
 
 def parse_json(text: str) -> Any:
@@ -83,5 +92,32 @@ def validate_resume_json(raw_text: str) -> Resume:
     # 字段类型(如 name 必须是 str|null、skills 元素必须是 str)交给 Pydantic 兜底。
     try:
         return Resume.model_validate(data)
+    except ValidationError as exc:
+        raise AIResponseError(f"AI response schema is invalid: {exc}") from exc
+
+
+def validate_score_json(raw_text: str) -> Score:
+    """校验评分结果 JSON 并转成 Score 模型。
+
+    检查思路同 validate_resume_json:
+    合法 JSON → 顶层对象 → 六个字段齐全 → interview_questions 是数组;
+    分数范围(0~100)与类型由 Score 模型的 Field(ge=0, le=100)兜底。
+    """
+    data = parse_json(raw_text)
+
+    if not isinstance(data, dict):
+        raise AIResponseError("AI response JSON is not an object.")
+
+    missing = SCORE_REQUIRED_KEYS - data.keys()
+    if missing:
+        raise AIResponseError(
+            "AI response is missing fields: " + ", ".join(sorted(missing))
+        )
+
+    if not isinstance(data["interview_questions"], list):
+        raise AIResponseError("field 'interview_questions' must be an array.")
+
+    try:
+        return Score.model_validate(data)
     except ValidationError as exc:
         raise AIResponseError(f"AI response schema is invalid: {exc}") from exc
