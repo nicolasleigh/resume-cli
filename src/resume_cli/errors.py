@@ -38,3 +38,7 @@ class AIConfigError(ResumeCliError):
 
 class AIRequestError(ResumeCliError):
     """调用 AI API 失败:网络错误、超时或 API 返回错误。"""
+
+
+class AIResponseError(ResumeCliError):
+    """AI 返回内容无法解析为合法 JSON,或结构不符合要求。"""
