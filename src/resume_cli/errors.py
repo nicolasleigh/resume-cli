@@ -30,3 +30,11 @@ class PDFReadError(ResumeCliError):
 
 class EmptyPDFError(ResumeCliError):
     """PDF 能打开但没有可提取的文本(例如纯扫描图片 PDF)。"""
+
+
+class AIConfigError(ResumeCliError):
+    """AI 配置错误,例如未设置 OPENAI_API_KEY。"""
+
+
+class AIRequestError(ResumeCliError):
+    """调用 AI API 失败:网络错误、超时或 API 返回错误。"""
