@@ -104,4 +104,10 @@ def score(
 
 def main() -> None:
     """setuptools console script 入口:直接运行 Typer app。"""
-    app()
+    try:
+        app()
+    except Exception as exc:  # noqa: BLE001 - 兜底,避免把 traceback 抛给普通用户
+        # 各命令已把可预期的业务错误转为友好提示;此处只兜底"未预期异常",
+        # 保证普通用户在任何情况下都不会看到 Python traceback(需求 §34)。
+        typer.echo(f"Error: {exc}", err=True)
+        raise SystemExit(1) from exc

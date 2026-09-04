@@ -17,7 +17,7 @@ from openai import (
     OpenAI,
 )
 
-from resume_cli.errors import AIConfigError, AIRequestError
+from resume_cli.errors import AIConfigError, AIRequestError, AIResponseError
 
 # 未显式配置 OPENAI_MODEL 时使用的默认模型。
 DEFAULT_MODEL = "gpt-4o-mini"
@@ -69,5 +69,8 @@ class AIClient:
                 "Please check your API key and network connection."
             ) from exc
 
-        # content 理论上始终存在;仍做容错,空字符串交由上层判断。
-        return (resp.choices[0].message.content or "").strip()
+        # content 理论上始终存在;为空时给出明确错误,避免下层解析出晦涩异常。
+        content = (resp.choices[0].message.content or "").strip()
+        if not content:
+            raise AIResponseError("AI returned an empty response.")
+        return content
