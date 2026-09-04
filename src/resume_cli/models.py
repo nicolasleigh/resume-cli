@@ -33,3 +33,21 @@ class Resume(BaseModel):
     education: list[Education] = Field(default_factory=list)
     # 技能列表,每一项是技能名称字符串。
     skills: list[str] = Field(default_factory=list)
+
+
+class Score(BaseModel):
+    """候选人与 JD 的匹配评分结果(需求 §22)。
+
+    四个分数都必须落在 0~100,由 Pydantic 的 ge/le 约束直接保证
+    (需求 §24:不允许出现 101 / -10 / 150 这类越界值)。
+    分数、评语、面试问题都要求模型完整返回,缺失即校验失败。
+    """
+
+    overall_score: int = Field(ge=0, le=100)
+    skill_score: int = Field(ge=0, le=100)
+    experience_score: int = Field(ge=0, le=100)
+    education_score: int = Field(ge=0, le=100)
+    # 简短自然语言评语,说明得分原因、优势与不足。
+    comment: str
+    # 针对候选人不足或岗位要求生成的面试问题,2~5 个为宜。
+    interview_questions: list[str]
