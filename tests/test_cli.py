@@ -26,6 +26,15 @@ def test_extract_mock_runs(text_pdf):
     assert "education" in result.output
 
 
+def test_extract_mock_output_file(text_pdf, tmp_path):
+    out = tmp_path / "result.json"
+    result = runner.invoke(app, ["extract", str(text_pdf), "--mock", "--output", str(out)])
+    assert result.exit_code == 0
+    assert "Result saved to:" in result.output
+    assert out.exists()
+    assert '"name": "张三"' in out.read_text(encoding="utf-8")
+
+
 def test_extract_mock_blank_pdf_errors(blank_pdf):
     result = runner.invoke(app, ["extract", str(blank_pdf), "--mock"])
     assert result.exit_code == 1

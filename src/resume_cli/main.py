@@ -27,6 +27,20 @@ app = typer.Typer(
 )
 
 
+def _emit_json(payload: str, output: Path | None) -> None:
+    """统一处理结果输出(需求 §30)。
+
+    - 未传 --output:完整 JSON 直接打印到 stdout;
+    - 传了 --output:完整 JSON 写入文件,终端只显示保存位置的简要提示。
+    """
+    if output is None:
+        typer.echo(payload)
+        return
+    output.write_text(payload + "\n", encoding="utf-8")
+    typer.echo("Result saved to:")
+    typer.echo(str(output))
+
+
 @app.command()
 def parse(pdf_path: Path) -> None:
     """Read a PDF resume and extract plain text."""
@@ -48,6 +62,9 @@ def parse(pdf_path: Path) -> None:
 def extract(
     pdf_path: Path,
     mock: bool = typer.Option(False, "--mock", help="Use mock AI responses (no API key required)."),
+    output: Path | None = typer.Option(
+        None, "--output", help="Save the full JSON result to this file."
+    ),
 ) -> None:
     """Extract structured candidate information using AI."""
     try:
@@ -68,7 +85,8 @@ def extract(
         raise typer.Exit(code=1)
 
     # 13:以缩进、UTF-8、中文原样显示的格式输出 JSON。
-    typer.echo(resume.model_dump_json(indent=2, ensure_ascii=False))
+    payload = resume.model_dump_json(indent=2, ensure_ascii=False)
+    _emit_json(payload, output)
 
 
 @app.command()
@@ -76,6 +94,9 @@ def score(
     pdf_path: Path,
     jd: Path = typer.Option(..., "--jd", help="Path to the job description text file."),
     mock: bool = typer.Option(False, "--mock", help="Use mock AI responses (no API key required)."),
+    output: Path | None = typer.Option(
+        None, "--output", help="Save the full JSON result to this file."
+    ),
 ) -> None:
     """Score candidate against a job description using AI."""
     try:
@@ -98,8 +119,9 @@ def score(
         typer.echo(f"Error: {e}", err=True)
         raise typer.Exit(code=1)
 
-    # 10:输出规范 JSON。
-    typer.echo(score_result.model_dump_json(indent=2, ensure_ascii=False))
+    # 10:输出规范 JSON(--output 时写入文件)。
+    payload = score_result.model_dump_json(indent=2, ensure_ascii=False)
+    _emit_json(payload, output)
 
 
 def main() -> None:
