@@ -123,6 +123,26 @@ cp .env.example .env
 > `.env` 已被 `.gitignore` 忽略,**不要把真实 API Key 提交到 GitHub**。
 > 没有 Key 时请使用 `--mock` 模式(见下文)。
 
+### 接入本地 Ollama
+
+如果本机已启动 [Ollama](https://ollama.com),可直接用本地模型跑 extract / score(无需远程 Key):
+
+```bash
+# 在 .env 中填写(或用 export):
+OPENAI_BASE_URL=http://localhost:11434/v1
+OPENAI_MODEL=llama3.1:8b   # 换成你本地已 pull 的模型,可用 `ollama list` 查看
+```
+
+说明:
+- Ollama 提供 OpenAI 兼容端点 `/v1`;指向 localhost 时本项目不再强制要求 `OPENAI_API_KEY`(本地服务不校验 Key);
+- 验证模型在跑:`curl http://localhost:11434/api/tags`;
+- 运行示例(真实调用本地模型):
+
+```bash
+resume-cli extract ./examples/resume.pdf
+resume-cli score ./examples/resume.pdf --jd ./examples/jd.txt
+```
+
 ## 8. parse 使用方式
 
 读取 PDF 并输出纯文本:
@@ -255,7 +275,7 @@ Mock 模式不需要 AI API Key,可以用于本地测试和演示。它返回固
 预期输出:
 
 ```text
-31 passed
+34 passed
 ```
 
 ## 13. 已知问题

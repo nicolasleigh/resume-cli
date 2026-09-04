@@ -8,6 +8,7 @@
 """
 
 import os
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 from openai import (
@@ -21,6 +22,18 @@ from resume_cli.errors import AIConfigError, AIRequestError, AIResponseError
 
 # 未显式配置 OPENAI_MODEL 时使用的默认模型。
 DEFAULT_MODEL = "gpt-4o-mini"
+
+# 本地 host:当 base_url 指向本地时,认为用户在跑 Ollama 之类的本地模型,
+# 这类服务通常不校验 API Key(见 __init__ 的处理)。
+_LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1", "0.0.0.0"}
+
+
+def _is_local_base_url(base_url: str | None) -> bool:
+    """判断 base_url 是否指向本机(用于本地 Ollama 场景)。"""
+    if not base_url:
+        return False
+    host = urlparse(base_url).hostname or ""
+    return host in _LOCAL_HOSTS
 
 
 class AIClient:
@@ -36,13 +49,20 @@ class AIClient:
         self.model = os.getenv("OPENAI_MODEL") or DEFAULT_MODEL
 
         if not self.api_key:
-            # 没有 Key 时提前给出可操作提示,而不是等 SDK 抛晦涩错误。
-            raise AIConfigError(
-                "OPENAI_API_KEY is not configured.\n"
-                "Please set the environment variable before using extract.\n"
-                "Hint: copy .env.example to .env and fill in your key, "
-                "or use --mock to run the demo without an API key."
-            )
+            if _is_local_base_url(self.base_url):
+                # 本地 Ollama 兼容服务不校验 Key,填占位符即可让 SDK 正常构造。
+                self.api_key = "ollama"
+            else:
+                # 没有 Key 且不是本地服务时提前给出可操作提示,
+                # 而不是等 SDK 抛晦涩错误。
+                raise AIConfigError(
+                    "OPENAI_API_KEY is not configured.\n"
+                    "Please set the environment variable before using extract.\n"
+                    "Hint: copy .env.example to .env and fill in your key, "
+                    "or use --mock to run the demo without an API key.\n"
+                    "Local Ollama? set OPENAI_BASE_URL=http://localhost:11434/v1 "
+                    "(no API key required)."
+                )
 
         # base_url 为空则使用 OpenAI 官方地址;若配置了兼容网关则走网关。
         self._client = OpenAI(api_key=self.api_key, base_url=self.base_url)
