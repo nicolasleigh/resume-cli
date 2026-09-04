@@ -42,3 +42,11 @@ class AIRequestError(ResumeCliError):
 
 class AIResponseError(ResumeCliError):
     """AI 返回内容无法解析为合法 JSON,或结构不符合要求。"""
+
+
+class JDNotFoundError(ResumeCliError):
+    """JD 文件不存在。"""
+
+
+class JDEmptyError(ResumeCliError):
+    """JD 文件内容为空(或只有空白字符)。"""
