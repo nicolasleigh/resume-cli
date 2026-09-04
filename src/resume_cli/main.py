@@ -1,7 +1,11 @@
 """resume-cli 命令行入口。
 
-Phase 0 目标:让 `resume-cli --help` 能展示 parse / extract / score 三个命令。
-三个命令在本阶段只是占位,具体实现将在后续 Phase 逐步完成。
+提供三个子命令:
+- parse:读取 PDF 简历并输出纯文本;
+- extract:用 AI 抽取结构化候选人信息(JSON);
+- score:结合 JD 用 AI 输出匹配评分(JSON)。
+
+所有可预期的错误统一转成 "Error: ..." 友好提示;完整错误体系见 errors.py。
 """
 
 from pathlib import Path
