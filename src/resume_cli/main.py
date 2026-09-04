@@ -11,8 +11,13 @@ import typer
 from resume_cli.ai_service import AIClient
 from resume_cli.errors import ResumeCliError
 from resume_cli.extract_prompt import SYSTEM_PROMPT, build_extract_user_message
-from resume_cli.json_utils import validate_resume_json
+from resume_cli.jd_service import read_jd_text
+from resume_cli.json_utils import validate_resume_json, validate_score_json
 from resume_cli.pdf_service import extract_text
+from resume_cli.score_prompt import (
+    SYSTEM_PROMPT as SCORE_SYSTEM_PROMPT,
+    build_score_user_message,
+)
 
 app = typer.Typer(
     name="resume-cli",
@@ -59,11 +64,31 @@ def extract(pdf_path: Path) -> None:
 
 
 @app.command()
-def score(pdf_path: Path, jd: Path) -> None:
+def score(
+    pdf_path: Path,
+    jd: Path = typer.Option(..., "--jd", help="Path to the job description text file."),
+) -> None:
     """Score candidate against a job description using AI."""
-    # 占位实现:正式实现在后续 Phase(JD 读取 + Score 模型)完成。
-    typer.echo("score 命令将在后续阶段实现。", err=True)
-    raise typer.Exit(code=1)
+    try:
+        # 1~2:PDF 校验 + 提取全文(流程对应需求 §21)。
+        resume_text = extract_text(pdf_path)
+        # 3~4:JD 校验 + 读取全文。
+        jd_text = read_jd_text(jd)
+        # 5~6:构造评分 Prompt 并调用 AI。
+        client = AIClient()
+        ai_text = client.chat(
+            SCORE_SYSTEM_PROMPT, build_score_user_message(resume_text, jd_text)
+        )
+        # 7~9:解析 JSON、校验评分结果(分数 0~100 由模型保证)。
+        score_result = validate_score_json(ai_text)
+    except ResumeCliError as e:
+        # PDF/JD/配置/网络/返回格式错误统一转成友好错误。
+        typer.echo(f"Error: {e}", err=True)
+        raise typer.Exit(code=1)
+
+    # 10:输出规范 JSON。
+    typer.echo(score_result.model_dump_json(indent=2, ensure_ascii=False))
+
 
 def main() -> None:
     """setuptools console script 入口:直接运行 Typer app。"""
