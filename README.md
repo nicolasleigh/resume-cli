@@ -87,21 +87,21 @@ Python >= 3.11
 
 ```bash
 cd resume-cli
-python3.12 -m venv .venv
-.venv/bin/python -m pip install --upgrade pip
-.venv/bin/pip install -e ".[dev]"
+python -m venv .venv
+python -m pip install --upgrade pip
+pip install -e ".[dev]"
 ```
 
 安装后即可使用:
 
 ```bash
-.venv/bin/resume-cli --help
+resume-cli --help
 ```
 
 首次演示前生成示例 PDF(纯标准库,无需联网):
 
 ```bash
-.venv/bin/python examples/generate_sample_pdfs.py
+python examples/generate_sample_pdfs.py
 ```
 
 > 生成的 `examples/resume.pdf`(两页虚拟简历)与 `examples/blank.pdf`(空白 PDF)用于下面的示例。
@@ -122,6 +122,27 @@ cp .env.example .env
 
 > `.env` 已被 `.gitignore` 忽略,**不要把真实 API Key 提交到 GitHub**。
 > 没有 Key 时请使用 `--mock` 模式(见下文)。
+
+### 使用 DeepSeek(OpenAI 兼容)
+
+在 [DeepSeek 开放平台](https://platform.deepseek.com/api_keys)申请 API Key 后,在 `.env` 中配置:
+
+```bash
+# 在 .env 中填写(或用 export):
+OPENAI_API_KEY=你的DeepSeek API Key
+OPENAI_BASE_URL=https://api.deepseek.com
+OPENAI_MODEL=deepseek-v4-flash
+```
+
+说明:
+- API Key 申请地址:`https://platform.deepseek.com/api_keys`;
+- `OPENAI_BASE_URL` 使用 `https://api.deepseek.com`,`OPENAI_MODEL` 使用 `deepseek-v4-flash`;
+- 运行示例(真实调用 DeepSeek):
+
+```bash
+resume-cli extract ./examples/resume.pdf
+resume-cli score ./examples/resume.pdf --jd ./examples/jd.txt
+```
 
 ### 接入本地 Ollama
 
