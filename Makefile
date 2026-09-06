@@ -7,6 +7,7 @@
 PYTHON     ?= python
 RESUME_CLI ?= resume-cli
 PDF        ?= examples/cv.pdf
+MOCK_PDF    ?= examples/resume.pdf
 JD         ?= examples/jd.txt
 CV_PARSE   ?= examples/cv_parse.txt
 CV_EXTRACT ?= examples/cv_extract.txt
@@ -48,6 +49,13 @@ demo-save-to-file:
 	$(RESUME_CLI) extract $(PDF) --output $(CV_EXTRACT)
 	@echo "=================================="
 	$(RESUME_CLI) score $(PDF) --jd $(JD) --output $(CV_SCORE)
+
+demo-mock: generate-examples
+	$(RESUME_CLI) parse $(MOCK_PDF)
+	@echo "=================================="
+	$(RESUME_CLI) extract $(MOCK_PDF) --mock
+	@echo "=================================="
+	$(RESUME_CLI) score $(MOCK_PDF) --jd $(JD) --mock
 
 parse:
 	$(RESUME_CLI) parse $(PDF)
