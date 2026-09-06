@@ -4,10 +4,13 @@
 #   make test           # 运行 pytest
 #   make demo           # 依次演示 parse / extract --mock / score --mock
 
-PYTHON     ?= .venv/bin/python
-RESUME_CLI ?= .venv/bin/resume-cli
-PDF        ?= examples/resume.pdf
+PYTHON     ?= python
+RESUME_CLI ?= resume-cli
+PDF        ?= examples/cv.pdf
 JD         ?= examples/jd.txt
+CV_PARSE   ?= examples/cv_parse.txt
+CV_EXTRACT ?= examples/cv_extract.txt
+CV_SCORE   ?= examples/cv_score.txt
 
 .PHONY: help install generate-examples test demo parse extract score
 
@@ -16,10 +19,10 @@ help:
 	@echo "  make install            创建 .venv 并安装依赖(含 dev)"
 	@echo "  make generate-examples  生成 examples/resume.pdf 与 blank.pdf"
 	@echo "  make test               运行 pytest"
-	@echo "  make demo               依次演示 parse / extract --mock / score --mock"
-	@echo "  make parse              运行 resume-cli parse examples/resume.pdf"
-	@echo "  make extract            运行 resume-cli extract examples/resume.pdf --mock"
-	@echo "  make score              运行 resume-cli score examples/resume.pdf --jd examples/jd.txt --mock"
+	@echo "  make demo               依次演示 parse / extract / score"
+	@echo "  make parse              运行 resume-cli parse examples/cv.pdf"
+	@echo "  make extract            运行 resume-cli extract examples/cv.pdf"
+	@echo "  make score              运行 resume-cli score examples/cv.pdf --jd examples/jd.txt"
 
 install:
 	python3.12 -m venv .venv
@@ -32,18 +35,25 @@ generate-examples:
 test:
 	$(PYTHON) -m pytest -q
 
-demo: generate-examples
+demo:
 	$(RESUME_CLI) parse $(PDF)
 	@echo "=================================="
-	$(RESUME_CLI) extract $(PDF) --mock
+	$(RESUME_CLI) extract $(PDF)
 	@echo "=================================="
-	$(RESUME_CLI) score $(PDF) --jd $(JD) --mock
+	$(RESUME_CLI) score $(PDF) --jd $(JD)
+
+demo-save-to-file:
+	$(RESUME_CLI) parse $(PDF)
+	@echo "=================================="
+	$(RESUME_CLI) extract $(PDF) --output $(CV_EXTRACT)
+	@echo "=================================="
+	$(RESUME_CLI) score $(PDF) --jd $(JD) --output $(CV_SCORE)
 
 parse:
 	$(RESUME_CLI) parse $(PDF)
 
 extract:
-	$(RESUME_CLI) extract $(PDF) --mock
+	$(RESUME_CLI) extract $(PDF)
 
 score:
-	$(RESUME_CLI) score $(PDF) --jd $(JD) --mock
+	$(RESUME_CLI) score $(PDF) --jd $(JD)
