@@ -106,6 +106,25 @@ python examples/generate_sample_pdfs.py
 
 > 生成的 `examples/resume.pdf`(两页虚拟简历)与 `examples/blank.pdf`(空白 PDF)用于下面的示例。
 
+### 极简启动(make 方式)
+
+激活虚拟环境(未激活先 `source .venv/bin/activate`)后,可以用三个 make 命令快速体验:
+
+```bash
+make demo-mock          # ① Mock 演示:无需 API Key,自动生成示例 PDF 并输出到控制台
+make demo               # ② 完整演示:parse / extract / score 输出到控制台(需配置真实 AI)
+make demo-save-to-file  # ③ 把 extract / score 结果保存到 examples/(需配置真实 AI)
+```
+
+说明:
+- `make demo-mock`:不依赖任何 API Key。会自动先生成示例 PDF,再用 `--mock` 固定数据把 parse / extract / score 结果打印到控制台——最快的本地演示方式;
+- `make demo`:使用真实 AI(需先按下文「7. 环境变量」配置 DeepSeek 或本地 Ollama),对 `examples/cv.pdf` 执行 parse / extract / score 并输出到控制台;
+- `make demo-save-to-file`:同 `demo`,但把 extract / score 的 JSON 分别保存到 `examples/cv_extract.txt` 与 `examples/cv_score.txt`;
+- 其它细粒度目标见 `make help`。
+
+> 提示:`demo` / `demo-save-to-file` 默认读取 `examples/cv.pdf`(请把你的真实简历 PDF 放到该路径);
+> 也可以覆盖变量改用示例 PDF,例如 `make demo PDF=examples/resume.pdf`。
+
 ## 7. 环境变量
 
 `resume-cli` 通过环境变量读取 AI 配置。复制 `.env.example` 为 `.env` 并填写即可:
