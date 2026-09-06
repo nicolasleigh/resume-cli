@@ -101,7 +101,7 @@ def extract(
 
     # 13:以缩进、UTF-8、中文原样显示的格式输出 JSON。
     logger.info("Done")
-    payload = resume.model_dump_json(indent=2, ensure_ascii=False)
+    payload = resume.model_dump_json(indent=2)
     _emit_json(payload, output)
 
 
